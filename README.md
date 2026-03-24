@@ -101,6 +101,10 @@ Open a supported item in RSS Dashboard reader view, then click `提取字幕`.
 
 The plugin tries to place the button near the built-in reader actions, currently preferring the position after `Open in Browser`.
 
+The blue button in the image below is the transcript download button:
+
+![Transcript download button](./images/button.png)
+
 ### Command Palette
 
 Available command:

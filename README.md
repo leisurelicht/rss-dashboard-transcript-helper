@@ -105,7 +105,7 @@ The plugin tries to place the button near the built-in reader actions, currently
 
 Available command:
 
-- `提取当前 YouTube 视频字幕并保存`
+- `提取当前视频字幕并保存`
 
 Despite the command name, the implementation also supports TED items when the current reader item is a TED talk.
 
@@ -236,4 +236,3 @@ Current major responsibilities in code:
 - Add a configurable `yt-dlp` path in plugin settings
 - Add a setting to disable button injection and keep command-only mode
 - Add better UI feedback for partial subtitle downloads
-

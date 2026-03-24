@@ -41,7 +41,7 @@ module.exports = class RssDashboardTranscriptHelperPlugin extends Plugin {
 
     this.addCommand({
       id: "extract-current-youtube-transcript",
-      name: "提取当前 YouTube 视频字幕并保存",
+      name: "提取当前视频字幕并保存",
       callback: async () => {
         await this.extractFromCurrentReader();
       }

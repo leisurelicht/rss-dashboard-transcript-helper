@@ -123,19 +123,19 @@ module.exports = class RssDashboardTranscriptHelperPlugin extends Plugin {
     };
 
     view.ensureTranscriptButton = () => {
-      let button = view.contentEl.querySelector(".rss-reader-transcript-button");
+      this.dedupeTranscriptButtons(view);
+
+      let button = (view.containerEl || view.contentEl).querySelector(".rss-reader-transcript-button");
       if (button) {
         view.transcriptButton = button;
         return;
       }
 
-      const wrap = view.contentEl.createDiv({ cls: "rss-reader-transcript-button-wrap" });
-      wrap.style.margin = "12px 0";
-      wrap.style.display = "flex";
-      wrap.style.justifyContent = "flex-start";
-      wrap.style.position = "sticky";
-      wrap.style.top = "8px";
-      wrap.style.zIndex = "20";
+      const wrap = document.createElement("div");
+      wrap.className = "rss-reader-transcript-button-wrap";
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.marginRight = "8px";
 
       button = wrap.createEl("button", {
         cls: "mod-cta rss-reader-transcript-button",
@@ -146,13 +146,12 @@ module.exports = class RssDashboardTranscriptHelperPlugin extends Plugin {
       button.style.alignItems = "center";
       button.style.gap = "6px";
       button.style.whiteSpace = "nowrap";
-      button.style.padding = "8px 14px";
+      button.style.padding = "6px 12px";
       button.style.borderRadius = "999px";
-      button.style.fontWeight = "600";
 
       const obsidian = require("obsidian");
       obsidian.setIcon(button, "captions");
-      view.contentEl.prepend(wrap);
+      this.insertTranscriptButtonWrap(view, wrap);
 
       button.addEventListener("click", () => {
         if (view.currentItem) {
@@ -180,6 +179,123 @@ module.exports = class RssDashboardTranscriptHelperPlugin extends Plugin {
 
     view.ensureTranscriptButton();
     view.updateTranscriptButtonState();
+  }
+
+  dedupeTranscriptButtons(view) {
+    const root = view.containerEl || view.contentEl;
+    const wraps = Array.from(root.querySelectorAll(".rss-reader-transcript-button-wrap"));
+    if (wraps.length <= 1) return;
+
+    const [first, ...rest] = wraps;
+    for (const extra of rest) {
+      extra.remove();
+    }
+
+    const button = first.querySelector(".rss-reader-transcript-button");
+    if (button) {
+      view.transcriptButton = button;
+    }
+  }
+
+  insertTranscriptButtonWrap(view, wrap) {
+    const browserButton = this.findOpenInBrowserButton(view);
+    if (browserButton?.parentElement) {
+      const parent = browserButton.parentElement;
+      parent.style.display = "flex";
+      parent.style.alignItems = "center";
+      if (browserButton.nextSibling) {
+        parent.insertBefore(wrap, browserButton.nextSibling);
+      } else {
+        parent.appendChild(wrap);
+      }
+      return;
+    }
+
+    const saveButton = this.findSaveArticleButton(view);
+    if (saveButton?.parentElement) {
+      const parent = saveButton.parentElement;
+      parent.style.display = "flex";
+      parent.style.alignItems = "center";
+      if (saveButton.nextSibling) {
+        parent.insertBefore(wrap, saveButton.nextSibling);
+      } else {
+        parent.appendChild(wrap);
+      }
+      return;
+    }
+
+    const actionBar = this.findActionBar(view);
+    if (actionBar) {
+      actionBar.style.display = "flex";
+      actionBar.style.alignItems = "center";
+      actionBar.appendChild(wrap);
+      return;
+    }
+
+    wrap.style.display = "flex";
+    wrap.style.margin = "12px 0";
+    view.contentEl.appendChild(wrap);
+  }
+
+  findOpenInBrowserButton(view) {
+    const root = view.containerEl || view.contentEl;
+    const directMatch = root?.querySelector?.('.rss-reader-action-button[title="Open in Browser"]');
+    if (directMatch) return directMatch;
+
+    const buttons = Array.from(root?.querySelectorAll?.("button, a, div[role='button'], .rss-reader-action-button") || []);
+    return buttons.find((element) => {
+      const text = (element.textContent || "").trim().toLowerCase();
+      const title = (element.getAttribute("title") || "").trim().toLowerCase();
+      const aria = (element.getAttribute("aria-label") || "").trim().toLowerCase();
+      const className = typeof element.className === "string" ? element.className.toLowerCase() : "";
+      return (
+        text.includes("open in browser") ||
+        title.includes("open in browser") ||
+        aria.includes("open in browser") ||
+        className.includes("browser") ||
+        className.includes("external-link")
+      );
+    });
+  }
+
+  findSaveArticleButton(view) {
+    const root = view.containerEl || view.contentEl;
+    const directMatch = root?.querySelector?.(".rss-dashboard-save-toggle");
+    if (directMatch) return directMatch;
+
+    const buttons = Array.from(root?.querySelectorAll?.("button, a, div[role='button']") || []);
+    return buttons.find((element) => {
+      const text = (element.textContent || "").trim().toLowerCase();
+      const title = (element.getAttribute("title") || "").trim().toLowerCase();
+      const aria = (element.getAttribute("aria-label") || "").trim().toLowerCase();
+      const className = typeof element.className === "string" ? element.className.toLowerCase() : "";
+      return (
+        text.includes("save article") ||
+        title.includes("save article") ||
+        aria.includes("save article") ||
+        className.includes("save") ||
+        className.includes("article-saver")
+      );
+    });
+  }
+
+  findActionBar(view) {
+    const root = view.containerEl || view.contentEl;
+    const candidates = [
+      ".view-header-actions",
+      ".view-actions",
+      ".rss-dashboard-action-toolbar",
+      ".rss-reader-header",
+      ".rss-reader-content",
+      ".rss-reader-toolbar"
+    ];
+
+    for (const selector of candidates) {
+      const element = root.querySelector(selector);
+      if (element) return element;
+    }
+
+    return null;
   }
 
   isSupportedItem(item) {

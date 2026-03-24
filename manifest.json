@@ -1,0 +1,9 @@
+{
+  "id": "rss-dashboard-transcript-helper",
+  "name": "RSS Dashboard Transcript Helper",
+  "version": "0.0.1",
+  "minAppVersion": "1.1.0",
+  "description": "Extract YouTube subtitles from the current RSS Dashboard video and save them as shadowing notes.",
+  "author": "OpenAI",
+  "isDesktopOnly": false
+}
